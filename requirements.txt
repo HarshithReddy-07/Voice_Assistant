@@ -1,0 +1,17 @@
+pyttsx3
+SpeechRecognition
+wikipedia
+PyDictionary
+youtube-search
+python-dotenv
+dateparser
+win10toast
+yt-dlp
+mutagen
+pyautogui
+pycaw
+screen-brightness-control
+pywin32
+google-generativeai
+openmeteo-requests
+newsapi-python

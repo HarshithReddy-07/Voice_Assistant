@@ -1,0 +1,31 @@
+hello Jarvis
+set reminder
+introduce yourself
+go to sleep
+goodbye
+search in browser   
+open browser   
+search in youtube  
+play in youtube   
+download from youtube   
+open vs   
+open whatsapp   
+play music   
+pause music   
+resume music   
+continue music   
+stop music    
+end music   
+recover unfinished downloads   
+send an email   
+get weather    
+check weather   
+increase brightness   
+decrease brightness   
+unmute volume   
+mute volume   
+shutdown pc   
+restart pc   
+get headlines   
+take screenshot    
+capture screen   
