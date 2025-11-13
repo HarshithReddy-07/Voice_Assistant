@@ -1,3 +1,4 @@
+# tasks.py
 import webbrowser
 import os
 import smtplib
@@ -6,13 +7,158 @@ from utils import *
 from youtube_search import YoutubeSearch
 from youtube_downloader import download_video
 from weather import get_weather
-from task_manager import run_task, announce_active_tasks, recover_unfinished_youtube_downloads
+from task_manager import run_task, announce_active_tasks
 from news import get_headlines
+import pyautogui
 
 load_dotenv("config.env")
-
 EMAIL_ID = os.getenv("EMAIL_ID", "")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "")
+
+# ——— LLM ACTION HANDLER ———
+def handle_task_action(action: dict):
+    cmd = action.get("action")
+
+    # ——— BROWSER & SEARCH ———
+    if cmd == "search in browser":
+        query = action.get("query")
+        if query is None:
+            speak("About what should I search")
+            return "search in browser"
+        run_task(f"Searching browser for {query}", webbrowser.open, f"https://www.google.com/search?q={query}")
+        return ""
+
+    elif cmd == "open browser":
+        run_task("Opening Chrome", os.startfile, r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+        return ""
+
+    elif cmd in ["search in youtube", "play in youtube"]:
+        query = action.get("query")
+        if not query:
+            speak("What should I search on YouTube?")
+            return cmd
+        if query != "None":
+            url = f"https://www.youtube.com/results?search_query={query}"
+            if cmd == "play in youtube":
+                results = YoutubeSearch(query, max_results=1).to_dict()
+                if results:
+                    url = "https://www.youtube.com" + results[0]["url_suffix"] # pyright: ignore[reportArgumentType]
+            run_task(f"YouTube: {query}", webbrowser.open, url)
+            return ""
+
+    elif cmd == "download from youtube":
+        query = action.get("query")
+        if not query:
+            speak("What video to download?")
+            return cmd
+        if query != "None":
+            def yt_download():
+                results = YoutubeSearch(query, max_results=1).to_dict()
+                if results:
+                    url = "https://www.youtube.com" + results[0]["url_suffix"].split("&list")[0] # pyright: ignore[reportArgumentType]
+                    run_task(f"Downloading {query}", download_video, url, metadata={"url": url})
+                else:
+                    speak("Video not found.")
+            yt_download()
+            return ""
+
+    # ——— APPS ———
+    elif cmd == "open vs":
+        run_task("Opening VS Code", os.startfile, r"C:\Users\harsh\AppData\Local\Programs\Microsoft VS Code\Code.exe")
+        return ""
+
+    elif cmd == "open whatsapp":
+        run_task("Opening WhatsApp", os.system, "start whatsapp:")
+        return ""
+
+    # ——— MUSIC ———
+    elif cmd == "play music":
+        source = action.get("source")
+        if source == "local":
+            run_task("Playing local music", play_music)
+        elif source == "youtube":
+            query = action.get("query")
+            if not query:
+                speak("What song on YouTube?")
+                return "play music from youtube"
+            if query != "None":
+                handle_task_action({"action": "play in youtube", "query": query})
+        else:
+            speak("Play from local or YouTube?")
+            return "play from local or youtube"
+        return ""
+
+    elif cmd in ["pause music", "stop music", "end music"]:
+        run_task("Pausing music", pause_music)
+        return ""
+    
+    elif cmd in ["resume music", "continue music"]:
+        run_task("Resuming music", resume_music)
+        return ""
+
+    # ——— EMAIL ———
+    elif cmd == "send an email":
+        speak("Recipient email?")
+        to = input("Email: ")
+        speak("Message?")
+        content = input("Message: ")
+        run_task(f"Sending email to {to}", send_email, to, content)
+
+    # ——— WEATHER ———
+    elif cmd == "get weather":
+        city = action.get("city", "nuzvid")
+        def fetch():
+            temp = get_weather(city)
+            speak(f"Temperature in {city} is {temp} degrees Celsius." if temp else "Weather unavailable.")
+        run_task(f"Weather for {city}", fetch)
+        return ""
+
+    # ——— SYSTEM ———
+    elif cmd == "increase brightness":
+        step = action.get("step", 10)
+        run_task(f"Brightness +{step}", increase_brightness, step)
+        return ""
+    
+    elif cmd == "decrease brightness":
+        step = action.get("step", 10)
+        run_task(f"Brightness -{step}", decrease_brightness, step)
+        return ""
+    
+    elif cmd == "mute volume":
+        run_task("Muting", mute_volume)
+        return ""
+    
+    elif cmd == "unmute volume":
+        run_task("Unmuting", unmute_volume)
+        return ""
+    
+    elif cmd == "shutdown pc":
+        speak("Shutting down in 5 seconds...")
+        run_task("Shutdown", shutdown_pc)
+        return ""
+    
+    elif cmd == "restart pc":
+        speak("Restarting...")
+        run_task("Restart", restart_pc)
+        return ""
+
+    # ——— NEWS ———
+    elif cmd == "get headlines":
+        count = action.get("count", 10)
+        run_task(f"Getting {count} headlines", lambda: [speak(h) for h in get_headlines(count)])
+        return ""
+
+    # ——— SCREENSHOT ———
+    elif cmd in ["take screenshot", "capture screen"]:
+        path = os.path.join(os.path.expanduser("~"), "Desktop", f"screenshot_{int(time.time())}.png")
+        pyautogui.screenshot(path)
+        speak(f"Screenshot saved to desktop.")
+        return ""
+
+    # ——— TASKS ———
+    elif cmd == "show my tasks":
+        announce_active_tasks()
+        return ""
 
 def send_email(to, content):
     try:
@@ -21,134 +167,6 @@ def send_email(to, content):
         server.login(EMAIL_ID, EMAIL_PASSWORD)
         server.sendmail(EMAIL_ID, to, content)
         server.close()
+        speak("Email sent.")
     except Exception as e:
-        print(e)
-        speak("Sorry, I couldn't send the email.")
-
-
-def perform_task(query: str):
-    """Perform web or system tasks with tracking."""
-
-    # 🧭 Active task report
-    if "show my task" in query or "what's running" in query:
-        announce_active_tasks()
-        return
-
-    # 🌐 Browsing
-    elif "search in browser" in query:
-        search = query.replace("search in browser", "").strip()
-        run_task(f"Searching for {search} in browser", webbrowser.open, f"https://www.google.com/search?q={search}")
-
-    elif "open browser" in query:
-        run_task("Opening Chrome browser", os.startfile, "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe")
-
-    elif "search in youtube" in query:
-        search = query.replace("search in youtube", "").strip()
-        run_task(f"Searching YouTube for {search}", webbrowser.open, f"https://www.youtube.com/results?search_query={search}")
-
-    # 🎵 YouTube actions
-    elif "play in youtube" in query:
-        song = query.replace("play in youtube", "").strip()
-        def play_video():
-            results = YoutubeSearch(song, max_results=1).to_dict()
-            if results:
-                url = "https://www.youtube.com" + results[0]["url_suffix"] # pyright: ignore[reportArgumentType]
-                webbrowser.open(url)
-                speak("Playing it on YouTube.")
-        run_task(f"Playing {song} on YouTube", play_video)
-
-    elif "download from youtube" in query:
-        song = query.replace("download from youtube", "").strip()
-        speak(f"Searching YouTube for {song}")
-
-        def yt_download():
-            results = YoutubeSearch(song, max_results=1).to_dict()
-            if results:
-                url = "https://www.youtube.com" + results[0]["url_suffix"] # pyright: ignore[reportArgumentType]
-                url = url.split("&list")[0]
-                run_task(f"Downloading {song} from YouTube", download_video, url, metadata={"url": url})
-            else:
-                speak("Video not found.")
-
-        yt_download()
-
-    # 💻 App launch
-    elif "open vs" in query:
-        run_task("Opening Visual Studio Code", os.startfile, r"C:\Users\harsh\AppData\Local\Programs\Microsoft VS Code\Code.exe")
-
-    elif "open whatsapp" in query:
-        run_task("Opening WhatsApp", os.system, "start whatsapp:")
-
-    # 🎧 Music
-    elif "play music" in query:
-        run_task("Playing your music sequentially", play_music)   
-
-    elif "pause music" in query:
-        speak("Pausing music.")
-        run_task("Pausing music in Windows Media Player", pause_music)
-
-    elif "resume music" in query or "continue music" in query:
-        speak("Resuming your music.")
-        run_task("Resuming music in Windows Media Player", resume_music)
-
-    elif "stop music" in query or "end music" in query:
-        speak("Stopping music.")
-        run_task("Stopping Windows Media Player music", stop_music)
-    
-    elif "recover unfinished downloads" in query:
-        run_task("Recovering unfinished tasks", recover_unfinished_youtube_downloads)
-
-    # 📧 Email
-    elif "send an email" in query:
-        speak("Enter recipient address: ")
-        to = input("Enter recipient address: ")
-        speak("Enter email content")
-        content = input("Enter email content: ")
-        run_task(f"Sending email to {to}", send_email, to, content)
-
-    # 🌦 Weather
-    elif "get weather" in query or "check weather" in query:
-        city = query.split()[-1]
-        print(query)
-        def fetch_weather():
-            temp = get_weather(city)
-            if temp is not None:
-                speak(f"Temperature in {city} is {temp} degrees Celsius.")
-        run_task(f"Fetching weather for {city}", fetch_weather)
-
-    # 💡 System controls
-    elif "increase brightness" in query:
-        try:
-            step = int(query.split()[-1])
-        except:
-            step = 10    
-        run_task(f"Increasing brightness by {step}", increase_brightness, step)
-
-    elif "decrease brightness" in query:
-        try:
-            step = int(query.split()[-1])
-        except:
-            step = 10
-        run_task(f"Decreasing brightness by {step}", decrease_brightness, step)
-
-    elif "unmute volume" in query:
-        run_task("Unmuting system volume", unmute_volume)
-        
-    elif "mute volume" in query:
-        run_task("Muting system volume", mute_volume)
-
-    elif "shutdown pc" in query:
-        run_task("Shutting down PC", shutdown_pc)
-
-    elif "restart pc" in query:
-        run_task("Restarting PC", restart_pc)
-
-    elif "get headlines" in query:
-        run_task("Getting top headlines", get_headlines, 10)    
-
-    elif "take screenshot" in query or "capture screen" in query:
-        run_task("Taking a screenshot", take_screenshot)
-
-    else:
-        speak("Task Not found")
-        
+        speak("Failed to send email.")
