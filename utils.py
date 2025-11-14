@@ -12,7 +12,14 @@ import win32com.client
 import pythoncom
 import datetime
 import threading
+import time
 from pycaw.pycaw import AudioUtilities
+
+music_state = {
+    "stop": False,
+    "pause": False
+}
+
 
 # Global SAPI voice object — thread-safe, no runAndWait() deadlock
 _sapi_voice = None
@@ -84,24 +91,26 @@ def get_wmp_player():
         return None
 
 def pause_music():
-    """Pause ANY media player using global Play/Pause key."""
+    music_state["pause"] = True
     pyautogui.press('playpause')
     speak("Music paused.")
-    time.sleep(0.3)  # Debounce
 
 def resume_music():
-    """Resume using global Play/Pause key."""
+    music_state["pause"] = False
     pyautogui.press('playpause')
     speak("Music resumed.")
-    time.sleep(0.3)
 
 def stop_music():
-    pyautogui.press('playpause')
+    music_state["stop"] = True
+    pyautogui.press('playpause')   # or pyautogui.press('stop') if supported
     speak("Music stopped.")
-    time.sleep(0.3)
+
 
 def play_music():
+    music_state["stop"] = False
+    music_state["pause"] = False
     music_dir = r"C:\Users\harsh\Music"
+
     songs = [f for f in os.listdir(music_dir) if f.lower().endswith(('.mp3', '.wav', '.aac', '.wma', '.m4a'))]
     if not songs:
         speak("No music files found in your Music folder.")
@@ -109,8 +118,12 @@ def play_music():
     speak(f"Playing {len(songs)} songs from your music folder, one after another.")
     random.shuffle(songs)
     for song in songs:
+        if music_state["stop"]:
+            speak("Stopped playing music.")
+            break
+
         file_path = os.path.join(music_dir, song)
-        speak(f"Now playing {song.split('.')[0]}")
+        os.startfile(file_path)
 
         duration = 180  # default 3 min fallback
         try:
@@ -118,9 +131,17 @@ def play_music():
             duration = int(audio.info.length)
         except Exception:
             pass
-        os.startfile(filepath = file_path)
+
+        elapsed = 0
+        while elapsed < duration:
+            if music_state["pause"] or music_state["stop"]:
+                time.sleep(1)
+                continue
+
+            time.sleep(1)
+            elapsed += 1
         # subprocess.Popen(['cmd', '/c', 'start', '', file_path], shell=True)
-        time.sleep(duration + 2)
+        # time.sleep(duration + 2)
 
     speak("All songs finished playing.")
 

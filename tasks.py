@@ -9,7 +9,6 @@ from youtube_downloader import download_video
 from weather import get_weather
 from task_manager import run_task, announce_active_tasks
 from news import get_headlines
-import pyautogui
 
 load_dotenv("config.env")
 EMAIL_ID = os.getenv("EMAIL_ID", "")
@@ -133,12 +132,10 @@ def handle_task_action(action: dict):
         return ""
     
     elif cmd == "shutdown pc":
-        speak("Shutting down in 5 seconds...")
         run_task("Shutdown", shutdown_pc)
         return ""
     
     elif cmd == "restart pc":
-        speak("Restarting...")
         run_task("Restart", restart_pc)
         return ""
 
@@ -150,9 +147,7 @@ def handle_task_action(action: dict):
 
     # ——— SCREENSHOT ———
     elif cmd in ["take screenshot", "capture screen"]:
-        path = os.path.join(os.path.expanduser("~"), "Desktop", f"screenshot_{int(time.time())}.png")
-        pyautogui.screenshot(path)
-        speak(f"Screenshot saved to desktop.")
+        run_task("Taking screenshot", take_screenshot)
         return ""
 
     # ——— TASKS ———
@@ -168,5 +163,7 @@ def send_email(to, content):
         server.sendmail(EMAIL_ID, to, content)
         server.close()
         speak("Email sent.")
+        return ""
     except Exception as e:
         speak("Failed to send email.")
+    return ""    

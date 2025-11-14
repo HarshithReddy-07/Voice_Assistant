@@ -62,8 +62,8 @@ def run_task(description: str, func, *args, metadata=None):
                 del active_tasks[threading.get_ident()]
 
     t = threading.Thread(target=wrapper, daemon=True)
-    active_tasks[t.ident] = {"description": description, "status": "running", "thread": t}
     t.start()
+    active_tasks[t.ident] = {"description": description, "status": "running", "thread": t}
     return t
 
 def list_active_tasks():

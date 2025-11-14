@@ -81,7 +81,7 @@ def handle_cancel():
 def main():
     previous = ""
     wish_me()
-    handle_first_run()
+    # handle_first_run()
     run_task("Checking reminders",check_reminders)
 
     INTRO_TEXT = "Hi Sir, I am Jarvis your desktop voice assistant. I can perform basic tasks for you."
@@ -95,7 +95,7 @@ def main():
         # ——— ROUTE THROUGH LLM ———
         if previous is None:
             previous = ""
-        actions = process_with_llm(previous + query)  # pyright: ignore[reportOptionalOperand] # ← This returns list of dicts
+        actions = process_with_llm(previous + " " + query)  # pyright: ignore[reportOptionalOperand] # ← This returns list of dicts
 
         if not actions:
             speak("I didn't understand that.")
@@ -136,7 +136,7 @@ def main():
                 dt = dateparser.parse(time_str)
                 if not dt:
                     speak("Sorry, I couldn't understand the time.")
-                    previous = f"set reminder about {content if content is not None else ""}"
+                    previous = f"set reminder about {content if content is not None else ''}"
                     continue
 
                 from reminders import reminders
@@ -166,6 +166,7 @@ def main():
                 # All other tasks → send to tasks.py
                 from tasks import handle_task_action
                 previous = handle_task_action(action)
+            break    
 
 if __name__ == "__main__":
     main()
