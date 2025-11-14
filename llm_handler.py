@@ -35,7 +35,7 @@ RULES (FOLLOW STRICTLY):
 12. For brightness/volume → extract step if number, else omit:
     {"action":"increase brightness","step":20}
 13. If unclear or not in command list:
-    - If you can answer naturally → {"action":"respond","text":"It's 3:45 PM"}
+    - If you can answer naturally → {"action":"respond","text":"your answer"}
     - Else → {"action":"unknown","response":"I didn't understand that."}
 
 EXAMPLES:
@@ -43,7 +43,7 @@ EXAMPLES:
 2. "forget that" → [{"action":"cancel"}]
 3. "never mind, play lofi on youtube" → [{"action":"cancel"},{"action":"play music","source":"youtube","query":"lofi"}]
 4. "cancel and shut down" → [{"action":"cancel"},{"action":"shutdown pc"}]
-5. "what's the time?" → [{"action":"respond","text":"It's 3:45 PM."}]
+5. "what's 2 + 2?" → [{"action":"respond","text":"tell result"}]
 6. "play music" → [{"action":"play music","source":null}]
 
 FINAL RULE: Treat every input independently. Be forgiving with phrasing. Always return a JSON ARRAY of action objects. OUTPUT ONLY JSON.
