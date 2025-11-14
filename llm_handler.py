@@ -29,7 +29,7 @@ RULES (FOLLOW STRICTLY):
 9. For "play music":
    - "local" → {"action":"play music","source":"local"}
    - "youtube" or song → {"action":"play music","source":"youtube","query":"..."}
-   - No source → {"action":"play music","source":null}
+   - No source → {"action":"play music","source":"youtube"}
 10. For "get weather" → default "nuzvid", override if city given: {"action":"get weather","city":"hyderabad"}
 11. For "get headlines" → extract count, default 10: {"action":"get headlines","count":15}
 12. For brightness/volume → extract step if number, else omit:
