@@ -103,6 +103,7 @@ def main():
 
         # ——— EXECUTE ACTIONS IN ORDER ———
         for action in actions:
+            # print(action)
             cmd = action.get("action")
 
             # CANCEL FIRST (always)
@@ -144,12 +145,19 @@ def main():
                 speak(f"Reminder set for {dt.strftime('%I:%M %p')} to {content}")
                 previous = ""
 
+            elif cmd == "get time":
+                from datetime import datetime
+                current = datetime.now().strftime("%I:%M %p")
+                speak(f"Sir, the time is {current}")
+                previous = ""
+
             elif cmd == "goodbye":
                 wish_me(False)
                 exit(0)
 
             elif cmd == "go to sleep":
                 speak("Going to sleep. Wake me with 'hello jar'.")
+                previous = ""
                 while "hello jar" not in take_command().lower():
                     time.sleep(1)
                 speak("I'm back!")
