@@ -32,7 +32,7 @@ RULES (FOLLOW STRICTLY):
    - No source → {"action":"play music","source":"youtube"}
 10. For "get weather" → default "nuzvid", override if city given: {"action":"get weather","city":"hyderabad"}
 11. For "get headlines" → extract count, default 10: {"action":"get headlines","count":15}
-12. For brightness/volume → extract step if number, else omit:
+12. For brightness/volume → extract step if number, else default 10:
     {"action":"increase brightness","step":20}
 13. If unclear or not in command list:
     - If you can answer naturally → {"action":"respond","text":"your answer"}
