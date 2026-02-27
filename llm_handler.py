@@ -50,8 +50,17 @@ FINAL RULE: Treat every input independently. Be forgiving with phrasing. Always 
 """
 
 def process_with_llm(user_input: str) -> list[dict[str,str]]:
-    response = model.generate_content(SYSTEM_PROMPT + "\nUser: " + user_input)
-    text = response.text.strip()
+    import google.api_core.exceptions
+    try:
+        response = model.generate_content(SYSTEM_PROMPT + "\nUser: " + user_input)
+        text = response.text.strip()
+    except google.api_core.exceptions.ResourceExhausted as e:
+        print(f"API Quota Exhausted: {e}")
+        return [{"action": "respond", "text": "Sir, my API quota limit has been reached. Please try again in an hour."}]
+    except Exception as e:
+        print(f"LLM API Error: {e}")
+        return [{"action": "respond", "text": "Sir, I encountered an error connecting to my brain."}]
+
     try:
         # Clean response: remove markdown, ```json, etc.
         if text.startswith("```json"):
