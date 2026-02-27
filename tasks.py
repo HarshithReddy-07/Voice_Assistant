@@ -9,6 +9,7 @@ from youtube_downloader import download_video
 from weather import get_weather
 from task_manager import run_task, announce_active_tasks
 from news import get_headlines
+from music_player import play_youtube_audio, pause_audio, stop_audio
 
 load_dotenv("config.env")
 EMAIL_ID = os.getenv("EMAIL_ID", "")
@@ -72,27 +73,33 @@ def handle_task_action(action: dict):
 
     # ——— MUSIC ———
     elif cmd == "play music":
-        source = action.get("source")
-        if source == "local":
-            run_task("Playing local music", play_music)
-        elif source == "youtube":
-            query = action.get("query")
-            if not query:
-                speak("What song on YouTube?")
-                return "play music from youtube"
-            if query != "None":
-                handle_task_action({"action": "play in youtube", "query": query})
-        else:
-            speak("Play from local or YouTube?")
-            return "play from local or youtube"
+        query = action.get("query")
+        if not query:
+            speak("What song on YouTube?")
+            return "play music from youtube"
+        if query != "None":
+            results = YoutubeSearch(query, max_results=1).to_dict()
+            if results:
+                url = "https://www.youtube.com" + results[0]["url_suffix"]
+                url = url.split("&list")[0]
+                play_youtube_audio(url)
+            else:
+                speak("Could not find that song on YouTube.")
         return ""
 
-    elif cmd in ["pause music", "stop music", "end music"]:
-        run_task("Pausing music", pause_music)
+    elif cmd in ["pause music"]:
+        pause_audio()
+        speak("Music paused")
         return ""
+
+    elif cmd in ["end music" , "stop music"]:
+        stop_audio()
+        speak("Music stopped")
+        return ""    
     
     elif cmd in ["resume music", "continue music"]:
-        run_task("Resuming music", resume_music)
+        speak("Music resumed")
+        pause_audio()
         return ""
 
     # ——— EMAIL ———

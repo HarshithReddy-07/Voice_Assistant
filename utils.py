@@ -4,22 +4,11 @@ import screen_brightness_control as sbc
 from pycaw.pycaw import AudioUtilities
 import os
 import subprocess
-import time
-from mutagen.mp3 import MP3
-import random
 import pyautogui
 import win32com.client
 import pythoncom
 import datetime
 import threading
-import time
-from pycaw.pycaw import AudioUtilities
-
-music_state = {
-    "stop": False,
-    "pause": False
-}
-
 
 # Global SAPI voice object — thread-safe, no runAndWait() deadlock
 _sapi_voice = None
@@ -70,81 +59,41 @@ def take_screenshot():
         image.save(filepath)
 
         # Open it
-        os.startfile(filepath)
+        # os.startfile(filepath)
 
         # Copy path to clipboard
         import pyperclip
         pyperclip.copy(filepath)
 
-        speak(f"Screenshot captured and opened. Path copied to clipboard.")
+        speak(f"Screenshot captured. Path copied to clipboard.")
         print(f"Screenshot saved at: {filepath}")
     except Exception as e:
         print(f"Screenshot failed: {e}")
         speak("Sorry sir, I couldn't take the screenshot.")
 
 
-def get_wmp_player():
-    """Return a handle to the running Windows Media Player instance."""
-    try:
-        return win32com.client.Dispatch("WMPlayer.OCX")
-    except Exception:
-        return None
-
-def pause_music():
-    music_state["pause"] = True
-    pyautogui.press('playpause')
-    speak("Music paused.")
-
-def resume_music():
-    music_state["pause"] = False
-    pyautogui.press('playpause')
-    speak("Music resumed.")
-
-def stop_music():
-    music_state["stop"] = True
-    pyautogui.press('playpause')   # or pyautogui.press('stop') if supported
-    speak("Music stopped.")
-
-
-def play_music():
-    music_state["stop"] = False
-    music_state["pause"] = False
-    music_dir = r"C:\Users\harsh\Music"
-
-    songs = [f for f in os.listdir(music_dir) if f.lower().endswith(('.mp3', '.wav', '.aac', '.wma', '.m4a'))]
-    if not songs:
-        speak("No music files found in your Music folder.")
-        return
-    speak(f"Playing {len(songs)} songs from your music folder, one after another.")
-    random.shuffle(songs)
-    for song in songs:
-        if music_state["stop"]:
-            speak("Stopped playing music.")
-            break
-
-        file_path = os.path.join(music_dir, song)
-        os.startfile(file_path)
-
-        duration = 180  # default 3 min fallback
-        try:
-            audio = MP3(file_path)
-            duration = int(audio.info.length)
-        except Exception:
-            pass
-
-        elapsed = 0
-        while elapsed < duration:
-            if music_state["pause"] or music_state["stop"]:
-                time.sleep(1)
-                continue
-
-            time.sleep(1)
-            elapsed += 1
-        # subprocess.Popen(['cmd', '/c', 'start', '', file_path], shell=True)
-        # time.sleep(duration + 2)
-
-    speak("All songs finished playing.")
-
+# def close_youtube_tab():
+#     """Attempt to find a browser window with YouTube and close the tab."""
+#     def callback(hwnd, _):
+#         if win32gui.IsWindowVisible(hwnd):
+#             title = win32gui.GetWindowText(hwnd)
+#             # Check for YouTube in title (common in Chrome, Edge, Firefox)
+#             if "YouTube" in title:
+#                 try:
+#                     # Bring window to front
+#                     win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+#                     win32gui.SetForegroundWindow(hwnd)
+#                     time.sleep(0.5) # Wait for focus
+#                     pyautogui.hotkey('ctrl', 'w')
+#                     print(f"Closed YouTube tab in: {title}")
+#                 except Exception as e:
+#                     print(f"Failed to close YouTube tab: {e}")
+#                 return # Stop after finding first logic
+    
+#     try:
+#         win32gui.EnumWindows(callback, None)
+#     except Exception as e:
+#         print(f"Window enumeration failed: {e}")
 
 def increase_brightness(step: int = 10):
     sbc.set_brightness(f"+{step}")

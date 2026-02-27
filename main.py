@@ -87,7 +87,8 @@ def main():
     INTRO_TEXT = "Hi Sir, I am Jarvis your desktop voice assistant. I can perform basic tasks for you."
 
     while True:
-        query : str = take_command()   # Use voice only when idle
+        # query : str = take_command().lower()   # Use voice only when idle
+        query = input().lower()  #testing without voice
         if query in ["None", ""]:
             time.sleep(0.5)
             continue
