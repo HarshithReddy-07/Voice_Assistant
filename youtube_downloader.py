@@ -30,8 +30,7 @@ def update_task_status(url: str, status: str):
 
 def download_video(url: str) -> None:
     """Download YouTube video with progress tracking and resume support."""
-    speak(f"Starting download for {url}")
-
+    speak(f"Download started")
     def progress_hook(d):
         if d["status"] == "downloading":
             percent = d.get("_percent_str", "").strip()
