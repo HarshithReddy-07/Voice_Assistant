@@ -69,6 +69,9 @@ User: "remind me at 8:30"
 User: "remind me to drink water"
 → [{"action":"respond","text":"When should I remind you?"}]
 
+User: "remind me at 9 40 pm about pr review"
+→ [{"action":"set reminder","time":"9:40 PM","content":"PR Review"}]
+
 SEARCH / PLAY / DOWNLOAD
 Requires query.
 
@@ -88,6 +91,13 @@ Cases:
 Example:
 User: "play music"
 → [{"action":"respond","text":"What would you like me to play?"}]
+
+Play in youtube when user specifically asks for video or play in youtube else consider it as play music command and not play in youtube.
+Example:
+User: "play reddy ikkada chudu from AVSR"
+→ [{"action":"play music","source":"youtube","query":"reddy ikkada chudu from AVSR"}]
+User: "play reddy ikkada chudu from AVSR in youtube"
+→ [{"action":"play in youtube","query":"reddy ikkada chudu from AVSR"}]
 
 GET WEATHER
 Default city: nuzvid
