@@ -9,6 +9,8 @@ import win32com.client
 import pythoncom
 import datetime
 import threading
+import pyperclip
+
 
 # Global SAPI voice object — thread-safe, no runAndWait() deadlock
 _sapi_voice = None
@@ -62,7 +64,6 @@ def take_screenshot():
         # os.startfile(filepath)
 
         # Copy path to clipboard
-        import pyperclip
         pyperclip.copy(filepath)
 
         speak(f"Screenshot captured. Path copied to clipboard.")
@@ -138,5 +139,5 @@ def take_command():
     return "None"
 
 if __name__ == "__main__" :
-    speak("Hello I am Jarivs")
+    speak("Hello I am Jarvis")
     take_screenshot()

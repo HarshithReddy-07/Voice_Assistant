@@ -22,36 +22,28 @@ def handle_task_action(action: dict):
     # ——— BROWSER & SEARCH ———
     if cmd == "search in browser":
         query = action.get("query")
-        if query is None:
-            speak("About what should I search")
-            return "search in browser"
-        run_task(f"Searching browser for {query}", webbrowser.open, f"https://www.google.com/search?q={query}")
-        return ""
+        if query and query != "None":
+            run_task(f"Searching browser for {query}", webbrowser.open, f"https://www.google.com/search?q={query}")
+        return
 
     elif cmd == "open browser":
         run_task("Opening Chrome", os.startfile, r"C:\Program Files\Google\Chrome\Application\chrome.exe")
-        return ""
+        return
 
     elif cmd in ["search in youtube", "play in youtube"]:
         query = action.get("query")
-        if not query:
-            speak("What should I search on YouTube?")
-            return cmd
-        if query != "None":
+        if query and query != "None":
             url = f"https://www.youtube.com/results?search_query={query}"
             if cmd == "play in youtube":
                 results = YoutubeSearch(query, max_results=1).to_dict()
                 if results:
                     url = "https://www.youtube.com" + results[0]["url_suffix"] # pyright: ignore[reportArgumentType]
             run_task(f"YouTube: {query}", webbrowser.open, url)
-            return ""
+        return
 
     elif cmd == "download from youtube":
         query = action.get("query")
-        if not query:
-            speak("What video to download?")
-            return cmd
-        if query != "None":
+        if query and query != "None":
             def yt_download():
                 results = YoutubeSearch(query, max_results=1).to_dict()
                 if results:
@@ -60,12 +52,12 @@ def handle_task_action(action: dict):
                 else:
                     speak("Video not found.")
             yt_download()
-            return ""
+        return
 
     # ——— APPS ———
     elif cmd == "open vs":
         run_task("Opening VS Code", os.startfile, r"C:\Users\harsh\AppData\Local\Programs\Microsoft VS Code\Code.exe")
-        return ""
+        return
 
     elif cmd == "open whatsapp":
         run_task("Opening WhatsApp", os.system, "start whatsapp:")
@@ -74,10 +66,7 @@ def handle_task_action(action: dict):
     # ——— MUSIC ———
     elif cmd == "play music":
         query = action.get("query")
-        if not query:
-            speak("What song on YouTube?")
-            return "play music from youtube"
-        if query != "None":
+        if query and query != "None":
             results = YoutubeSearch(query, max_results=1).to_dict()
             if results:
                 url = "https://www.youtube.com" + results[0]["url_suffix"]
@@ -85,22 +74,22 @@ def handle_task_action(action: dict):
                 play_youtube_audio(url)
             else:
                 speak("Could not find that song on YouTube.")
-        return ""
+        return
 
     elif cmd in ["pause music"]:
         pause_audio()
         speak("Music paused")
-        return ""
+        return
 
     elif cmd in ["end music" , "stop music"]:
         stop_audio()
         speak("Music stopped")
-        return ""    
+        return    
     
     elif cmd in ["resume music", "continue music"]:
         speak("Music resumed")
         pause_audio()
-        return ""
+        return
 
     # ——— EMAIL ———
     elif cmd == "send an email":
@@ -117,50 +106,50 @@ def handle_task_action(action: dict):
             temp = get_weather(city)
             speak(f"Temperature in {city} is {temp} degrees Celsius." if temp else "Weather unavailable.")
         run_task(f"Weather for {city}", fetch)
-        return ""
+        return
 
     # ——— SYSTEM ———
     elif cmd == "increase brightness":
         step = action.get("step", 10)
         run_task(f"Brightness +{step}", increase_brightness, step)
-        return ""
+        return
     
     elif cmd == "decrease brightness":
         step = action.get("step", 10)
         run_task(f"Brightness -{step}", decrease_brightness, step)
-        return ""
+        return
     
     elif cmd == "mute volume":
         run_task("Muting", mute_volume)
-        return ""
+        return
     
     elif cmd == "unmute volume":
         run_task("Unmuting", unmute_volume)
-        return ""
+        return
     
     elif cmd == "shutdown pc":
         run_task("Shutdown", shutdown_pc)
-        return ""
+        return
     
     elif cmd == "restart pc":
         run_task("Restart", restart_pc)
-        return ""
+        return
 
     # ——— NEWS ———
     elif cmd == "get headlines":
         count = action.get("count", 10)
         run_task(f"Getting {count} headlines", lambda: [speak(h) for h in get_headlines(count)])
-        return ""
+        return
 
     # ——— SCREENSHOT ———
     elif cmd in ["take screenshot", "capture screen"]:
         run_task("Taking screenshot", take_screenshot)
-        return ""
+        return
 
     # ——— TASKS ———
     elif cmd == "show my tasks":
         announce_active_tasks()
-        return ""
+        return
 
 def send_email(to, content):
     try:
@@ -170,7 +159,7 @@ def send_email(to, content):
         server.sendmail(EMAIL_ID, to, content)
         server.close()
         speak("Email sent.")
-        return ""
+        return
     except Exception as e:
         speak("Failed to send email.")
-    return ""    
+    return    

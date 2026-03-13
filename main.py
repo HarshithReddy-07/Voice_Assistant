@@ -5,6 +5,7 @@ from reminders import check_reminders
 from news import get_headlines
 from task_manager import run_task
 from llm_handler import process_with_llm
+from reminders import reminders
 
 today = datetime.datetime.today()
 yesterday = today - datetime.timedelta(days=1)
@@ -65,7 +66,6 @@ def start_reminder_setup():
         import dateparser
         dt = dateparser.parse(time_text)
         if dt:
-            from reminders import reminders
             reminders.append([dt.hour, dt.minute, content])
             speak("Reminder set successfully.")
         else:
@@ -79,24 +79,21 @@ def handle_cancel():
 
 # ——————— MAIN LOOP ———————
 def main():
-    previous = ""
     wish_me()
-    # handle_first_run()
+    handle_first_run()
     run_task("Checking reminders",check_reminders)
 
     INTRO_TEXT = "Hi Sir, I am Jarvis your desktop voice assistant. I can perform basic tasks for you."
 
     while True:
-        # query : str = take_command().lower()   # Use voice only when idle
-        query = input().lower()  #testing without voice
-        if query in ["None", ""]:
+        query : str = take_command().lower()   # Use voice only when idle
+        # query = input().lower()  #testing without voice
+        if query in ["none", ""]:
             time.sleep(0.5)
             continue
 
         # ——— ROUTE THROUGH LLM ———
-        if previous is None:
-            previous = ""
-        actions = process_with_llm(previous + " " + query)  # pyright: ignore[reportOptionalOperand] # ← This returns list of dicts
+        actions = process_with_llm(query)  # pyright: ignore[reportOptionalOperand] # ← This returns list of dicts
 
         if not actions:
             speak("I didn't understand that.")
@@ -104,77 +101,54 @@ def main():
 
         # ——— EXECUTE ACTIONS IN ORDER ———
         for action in actions:
-            # print(action)
+            print(action)
             cmd = action.get("action")
 
             # CANCEL FIRST (always)
             if cmd == "cancel":
                 handle_cancel()
-                previous = ""
                 continue  # Skip rest of actions if cancel was first
 
+            elif cmd == "respond":
+                speak(action.get("text", "Okay."))
+
             # ——— COMMAND ROUTING ———
-            if cmd == "introduce yourself":
+            elif cmd == "introduce yourself":
                 speak(INTRO_TEXT)
-                previous = ""
 
             elif cmd == "set reminder":
-                time_str = action.get("time", "")
-                content = action.get("content", "something")
-                
-                if not time_str and not content:
-                    speak("please tell when to remind you and what to remind")
-                    previous = "set reminder"
-                    continue
-                elif not time_str :
-                    speak("please tell when to remind you ")
-                    previous = f"set reminder about {content}"
-                    continue
-                elif not content :
-                    speak("please tell what to remind you ")
-                    previous = f"set reminder at {time_str}"
-                    continue
-                # Parse time
-                dt = dateparser.parse(time_str)
-                if not dt:
-                    speak("Sorry, I couldn't understand the time.")
-                    previous = f"set reminder about {content if content is not None else ''}"
-                    continue
-
-                from reminders import reminders
-                reminders.append([dt.hour, dt.minute, content])
-                speak(f"Reminder set for {dt.strftime('%I:%M %p')} to {content}")
-                previous = ""
+                time_str = action.get("time")
+                content = action.get("content")
+                if time_str and content:
+                    dt = dateparser.parse(time_str)
+                    if dt:
+                        reminders.append([dt.hour, dt.minute, content])
+                        speak(f"Reminder set for {dt.strftime('%I:%M %p')} to {content}")
+                    else:
+                        speak("Sorry, I couldn't understand the time.")
 
             elif cmd == "get time":
                 from datetime import datetime
                 current = datetime.now().strftime("%I:%M %p")
                 speak(f"Sir, the time is {current}")
-                previous = ""
 
             elif cmd == "goodbye":
                 wish_me(False)
                 exit(0)
 
             elif cmd == "go to sleep":
-                speak("Going to sleep. Wake me with 'hello jar'.")
-                previous = ""
+                speak("Going to sleep. Wake me with 'hello jarvis'.")
                 while "hello jar" not in take_command().lower():
                     time.sleep(1)
                 speak("I'm back!")
 
-            elif cmd == "respond":
-                speak(action.get("text", "Okay."))
-                previous = ""
-
             elif cmd == "unknown":
                 speak(action.get("response", "I didn't understand that."))
-                previous = ""
 
             else:
                 # All other tasks → send to tasks.py
                 from tasks import handle_task_action
-                previous = handle_task_action(action)
+                handle_task_action(action)
             break    
 
 if __name__ == "__main__":
