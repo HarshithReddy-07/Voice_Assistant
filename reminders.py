@@ -7,6 +7,12 @@ from win10toast import ToastNotifier
 reminders = []
 toaster = ToastNotifier()
 
+old_on_destroy = ToastNotifier.on_destroy
+def patched_on_destroy(self, hwnd, msg, wparam, lparam):
+    old_on_destroy(self, hwnd, msg, wparam, lparam)
+    return 0
+ToastNotifier.on_destroy = patched_on_destroy
+
 def set_reminder():
     speak("At what time should I remind you?")
     while True:
