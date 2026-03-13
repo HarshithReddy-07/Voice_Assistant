@@ -13,3 +13,5 @@ pywin32==308
 google-generativeai==0.8.5
 openmeteo-requests==1.7.4
 newsapi-python==0.2.7
+groq==1.0.0
+pyperclip==1.11.0
